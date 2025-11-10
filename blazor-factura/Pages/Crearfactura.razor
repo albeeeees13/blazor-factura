@@ -1,0 +1,117 @@
+@layout Shared.BlankLayout
+@page "/facturas/nueva"
+
+@using blazor_factura.Data 
+@inject ServicioFacturas ServicioFacturas
+@inject NavigationManager NavigationManager
+
+<h1>Crear Nueva Factura</h1>
+
+<EditForm Model="facturaActual" OnValidSubmit="HandleValidSubmit" FormName="FacturaForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <label>Nombre del Cliente:</label>
+    <br />
+    <InputText @bind-Value="facturaActual.NombreCliente" />
+    <br />
+    <label>Fecha de Factura:</label>
+    <br />
+    <InputDate @bind-Value="facturaActual.Fecha" />
+
+    <hr />
+
+    <h3>Artículos</h3>
+    @if (facturaActual.Articulos.Any())
+    {
+        <ul>
+            @foreach (var art in facturaActual.Articulos)
+            {
+                <li>
+                    @art.Descripcion 
+                    (Cant: @art.Cantidad, 
+                    Precio: @art.PrecioUnitario.ToString("C"), 
+                    Subtotal: @art.Subtotal.ToString("C"))
+                    <button type="button" @onclick="() => QuitarArticulo(art)">Quitar</button>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No hay artículos agregados.</p>
+    }
+
+    <div style="border: 1px solid black; padding: 10px; margin-top: 15px; margin-bottom: 15px;">
+        <strong>Añadir Artículo</strong><br />
+        <EditForm Model="articuloNuevo" OnValidSubmit="AgregarArticulo" FormName="ArticuloForm" Context="articuloContext">
+            <DataAnnotationsValidator />
+            
+            <label>Descripción:</label>
+            <InputText @bind-Value="articuloNuevo.Descripcion" />
+
+            <label>Cantidad:</label>
+            <InputNumber @bind-Value="articuloNuevo.Cantidad" />
+            
+            <label>Precio Unitario:</label>
+            <InputNumber @bind-Value="articuloNuevo.PrecioUnitario" />
+            
+            <button type="submit">Añadir +</button>
+            <br />
+            <ValidationSummary />
+        </EditForm>
+    </div>
+
+    <hr />
+    <h2>Total: @facturaActual.Total.ToString("C")</h2>
+    
+    <button type="submit">Guardar Factura</button>
+
+</EditForm>
+
+@if (!string.IsNullOrEmpty(mensajeExito))
+{
+    <div style="color: green; margin-top: 15px;">
+        @mensajeExito
+    </div>
+}
+
+@code {
+    private Factura facturaActual = new();
+    private Articulo articuloNuevo = new();
+    private string mensajeExito = "";
+
+    private void AgregarArticulo()
+    {
+        facturaActual.Articulos.Add(articuloNuevo);
+        articuloNuevo = new();
+        mensajeExito = "";
+    }
+
+    private void QuitarArticulo(Articulo articulo)
+    {
+        facturaActual.Articulos.Remove(articulo);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!facturaActual.Articulos.Any())
+        {
+            mensajeExito = "Error: Debe agregar al menos un artículo.";
+            return;
+        }
+
+        try
+        {
+            await ServicioFacturas.GuardarFacturaAsync(facturaActual);
+            
+            facturaActual = new();
+            articuloNuevo = new();
+            mensajeExito = "¡Factura guardada con éxito en la Base de Datos!";
+        }
+        catch (Exception ex)
+        {
+            mensajeExito = $"Error al guardar: {ex.Message}";
+        }
+    }
+}

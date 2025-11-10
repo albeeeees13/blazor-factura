@@ -1,0 +1,10 @@
+# Archivos de Base de Datos
+*.db
+*.db-journal
+
+# Carpetas de compilación de .NET
+bin/
+obj/
+
+# Archivos de usuario
+.vscode/

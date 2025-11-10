@@ -1,8 +1,16 @@
 {
   "version": 2,
-  "dgSpecHash": "uxCnqqtcmFA=",
+  "dgSpecHash": "Lxxsi442WI4=",
   "success": true,
   "projectFilePath": "/Users/albes/Desktop/blazor-factura/blazor-factura/blazor-factura/blazor-factura.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/albes/.nuget/packages/microsoft.data.sqlite/9.0.10/microsoft.data.sqlite.9.0.10.nupkg.sha512",
+    "/Users/albes/.nuget/packages/microsoft.data.sqlite.core/9.0.10/microsoft.data.sqlite.core.9.0.10.nupkg.sha512",
+    "/Users/albes/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.10/sqlitepclraw.bundle_e_sqlite3.2.1.10.nupkg.sha512",
+    "/Users/albes/.nuget/packages/sqlitepclraw.core/2.1.10/sqlitepclraw.core.2.1.10.nupkg.sha512",
+    "/Users/albes/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.10/sqlitepclraw.lib.e_sqlite3.2.1.10.nupkg.sha512",
+    "/Users/albes/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.10/sqlitepclraw.provider.e_sqlite3.2.1.10.nupkg.sha512",
+    "/Users/albes/.nuget/packages/system.memory/4.5.3/system.memory.4.5.3.nupkg.sha512"
+  ],
   "logs": []
 }
