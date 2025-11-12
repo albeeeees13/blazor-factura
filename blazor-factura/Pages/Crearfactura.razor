@@ -32,6 +32,9 @@
                     (Cant: @art.Cantidad, 
                     Precio: @art.PrecioUnitario.ToString("C"), 
                     Subtotal: @art.Subtotal.ToString("C"))
+                    
+                    <button type="button" @onclick="() => CargarArticuloParaEditar(art)">Editar</button>
+
                     <button type="button" @onclick="() => QuitarArticulo(art)">Quitar</button>
                 </li>
             }
@@ -43,8 +46,11 @@
     }
 
     <div style="border: 1px solid black; padding: 10px; margin-top: 15px; margin-bottom: 15px;">
-        <strong>Añadir Artículo</strong><br />
-        <EditForm Model="articuloNuevo" OnValidSubmit="AgregarArticulo" FormName="ArticuloForm" Context="articuloContext">
+        
+        <strong>@(articuloParaEditar == null ? "Añadir Artículo" : $"Editando: {articuloParaEditar.Descripcion}")</strong>
+        
+        <br />
+        <EditForm Model="articuloNuevo" OnValidSubmit="GuardarArticulo" FormName="ArticuloForm" Context="articuloContext">
             <DataAnnotationsValidator />
             
             <label>Descripción:</label>
@@ -56,12 +62,17 @@
             <label>Precio Unitario:</label>
             <InputNumber @bind-Value="articuloNuevo.PrecioUnitario" />
             
-            <button type="submit">Añadir +</button>
+            <button type="submit">@(articuloParaEditar == null ? "Añadir +" : "Actualizar")</button>
+            
+            @if (articuloParaEditar != null)
+            {
+                <button type="button" @onclick="CancelarEdicion">Cancelar</button>
+            }
+            
             <br />
             <ValidationSummary />
         </EditForm>
     </div>
-
     <hr />
     <h2>Total: @facturaActual.Total.ToString("C")</h2>
     
@@ -81,18 +92,60 @@
     private Articulo articuloNuevo = new();
     private string mensajeExito = "";
 
-    private void AgregarArticulo()
+    
+    private Articulo articuloParaEditar = null;
+
+    
+    private void GuardarArticulo()
     {
-        facturaActual.Articulos.Add(articuloNuevo);
-        articuloNuevo = new();
+        if (articuloParaEditar != null)
+        {
+          
+            articuloParaEditar.Descripcion = articuloNuevo.Descripcion;
+            articuloParaEditar.Cantidad = articuloNuevo.Cantidad;
+            articuloParaEditar.PrecioUnitario = articuloNuevo.PrecioUnitario;
+        }
+        else
+        {
+          
+            facturaActual.Articulos.Add(articuloNuevo);
+        }
+
+       
+        CancelarEdicion();
         mensajeExito = "";
     }
 
+   
     private void QuitarArticulo(Articulo articulo)
     {
         facturaActual.Articulos.Remove(articulo);
+        CancelarEdicion(); // Cancelamos la edición si estábamos editando este artículo
     }
 
+   
+    private void CargarArticuloParaEditar(Articulo art)
+    {
+       
+        articuloParaEditar = art;
+
+      
+        articuloNuevo = new Articulo
+        {
+            Descripcion = art.Descripcion,
+            Cantidad = art.Cantidad,
+            PrecioUnitario = art.PrecioUnitario
+        };
+    }
+
+   
+    private void CancelarEdicion()
+    {
+        articuloNuevo = new Articulo();
+        articuloParaEditar = null;
+    }
+
+    
     private async Task HandleValidSubmit()
     {
         if (!facturaActual.Articulos.Any())
@@ -107,6 +160,7 @@
             
             facturaActual = new();
             articuloNuevo = new();
+            CancelarEdicion();
             mensajeExito = "¡Factura guardada con éxito en la Base de Datos!";
         }
         catch (Exception ex)
