@@ -1,0 +1,122 @@
+@page "/resumen"
+@layout Shared.BlankLayout
+@using blazor_factura.Data
+@inject ServicioFacturas ServicioFacturas
+
+<h1>Resumen de Gastos por Cliente</h1>
+
+<label for="cliente">Seleccione un cliente:</label>
+<select id="cliente" @onchange="OnClienteChange">
+    <option value="">-- Seleccione --</option>
+    @if (listaClientes != null)
+    {
+        @foreach (var cliente in listaClientes)
+        {
+            <option value="@cliente">@cliente</option>
+        }
+    }
+</select>
+
+@if (!string.IsNullOrEmpty(clienteSeleccionado))
+{
+    <hr />
+    <h2>Reporte para: @clienteSeleccionado</h2>
+
+    <h3>Total por Mes</h3>
+    @if (gastoMensual == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!gastoMensual.Any())
+    {
+        <p>No hay gastos mensuales registrados para este cliente.</p>
+    }
+    else
+    {
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th>Mes (YYYY-MM)</th>
+                    <th>Total Gastado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in gastoMensual)
+                {
+                    <tr>
+                        <td>@item.Periodo</td>
+                        <td>@item.TotalGastado.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h3>Total por Año</h3>
+    @if (gastoAnual == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!gastoAnual.Any())
+    {
+        <p>No hay gastos anuales registrados para este cliente.</p>
+    }
+    else
+    {
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th>Año</th>
+                    <th>Total Gastado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in gastoAnual)
+                {
+                    <tr>
+                        <td>@item.Periodo</td>
+                        <td>@item.TotalGastado.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+
+@code {
+    private List<string> listaClientes;
+    private string clienteSeleccionado;
+    private List<ResumenGasto> gastoMensual;
+    private List<ResumenGasto> gastoAnual;
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        listaClientes = await ServicioFacturas.ObtenerClientesAsync();
+    }
+
+    
+    private async Task OnClienteChange(ChangeEventArgs e)
+    {
+        clienteSeleccionado = e.Value.ToString();
+        
+        
+        if (!string.IsNullOrEmpty(clienteSeleccionado))
+        {
+           
+            gastoMensual = null;
+            gastoAnual = null;
+            
+         
+            gastoMensual = await ServicioFacturas.ObtenerGastoMensualPorClienteAsync(clienteSeleccionado);
+            gastoAnual = await ServicioFacturas.ObtenerGastoAnualPorClienteAsync(clienteSeleccionado);
+        }
+        else
+        {
+          
+            gastoMensual = null;
+            gastoAnual = null;
+        }
+    }
+}

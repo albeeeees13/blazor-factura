@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 // Esta línea es la que define el namespace
 namespace blazor_factura.Data
@@ -21,10 +23,10 @@ namespace blazor_factura.Data
             {
                 var comandoFactura = conexion.CreateCommand();
                 comandoFactura.Transaction = transaccion;
-                comandoFactura.CommandText = 
+                comandoFactura.CommandText =
                     @"INSERT INTO Facturas (Fecha, NombreCliente, Total) 
                       VALUES ($fecha, $cliente, $total)";
-                comandoFactura.Parameters.AddWithValue("$fecha", factura.Fecha.ToString("o")); 
+                comandoFactura.Parameters.AddWithValue("$fecha", factura.Fecha.ToString("o"));
                 comandoFactura.Parameters.AddWithValue("$cliente", factura.NombreCliente);
                 comandoFactura.Parameters.AddWithValue("$total", factura.Total);
                 await comandoFactura.ExecuteNonQueryAsync();
@@ -38,7 +40,7 @@ namespace blazor_factura.Data
                 {
                     var comandoArticulo = conexion.CreateCommand();
                     comandoArticulo.Transaction = transaccion;
-                    comandoArticulo.CommandText = 
+                    comandoArticulo.CommandText =
                         @"INSERT INTO Articulos (FacturaId, Descripcion, Cantidad, PrecioUnitario)
                           VALUES ($facturaId, $desc, $cant, $precio)";
                     comandoArticulo.Parameters.AddWithValue("$facturaId", nuevoFacturaId);
@@ -52,8 +54,82 @@ namespace blazor_factura.Data
             catch (Exception)
             {
                 await transaccion.RollbackAsync();
-                throw; 
+                throw;
             }
         }
+
+        public async Task<List<string>> ObtenerClientesAsync()
+        {
+            var clientes = new List<string>();
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "SELECT DISTINCT NombreCliente FROM Facturas ORDER BY NombreCliente";
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                clientes.Add(lector.GetString(0));
+            }
+            return clientes;
+        }
+        public async Task<List<ResumenGasto>> ObtenerGastoMensualPorClienteAsync(string nombreCliente)
+        {
+            var resumen = new List<ResumenGasto>();
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+
+            comando.CommandText = @"
+        SELECT strftime('%Y-%m', Fecha) as Periodo, SUM(Total) as TotalGastado
+        FROM Facturas
+        WHERE NombreCliente = $cliente
+        GROUP BY Periodo
+        ORDER BY Periodo DESC";
+
+            comando.Parameters.AddWithValue("$cliente", nombreCliente);
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                resumen.Add(new ResumenGasto
+                {
+                    Periodo = lector.GetString(0),
+                    TotalGastado = lector.GetDecimal(1)
+                });
+            }
+            return resumen;
+        }
+        public async Task<List<ResumenGasto>> ObtenerGastoAnualPorClienteAsync(string nombreCliente)
+        {
+            var resumen = new List<ResumenGasto>();
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+            comando.CommandText = @"
+        SELECT strftime('%Y', Fecha) as Periodo, SUM(Total) as TotalGastado
+        FROM Facturas
+        WHERE NombreCliente = $cliente
+        GROUP BY Periodo
+        ORDER BY Periodo DESC";
+
+            comando.Parameters.AddWithValue("$cliente", nombreCliente);
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                resumen.Add(new ResumenGasto
+                {
+                    Periodo = lector.GetString(0),
+                    TotalGastado = lector.GetDecimal(1)
+                });
+            }
+            return resumen;
+        }
+
+
     }
 }
