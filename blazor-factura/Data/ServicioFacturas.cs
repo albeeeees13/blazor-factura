@@ -74,34 +74,34 @@ namespace blazor_factura.Data
             }
             return clientes;
         }
-        public async Task<List<ResumenGasto>> ObtenerGastoMensualPorClienteAsync(string nombreCliente)
-        {
-            var resumen = new List<ResumenGasto>();
-            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
-            await conexion.OpenAsync();
-
-            var comando = conexion.CreateCommand();
-
-            comando.CommandText = @"
+       public async Task<List<ResumenGasto>> ObtenerGastoMensualAsync(string nombreCliente, string anio)
+{
+    var resumen = new List<ResumenGasto>();
+    using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+    await conexion.OpenAsync();
+    
+    var comando = conexion.CreateCommand();
+    comando.CommandText = @"
         SELECT strftime('%Y-%m', Fecha) as Periodo, SUM(Total) as TotalGastado
         FROM Facturas
-        WHERE NombreCliente = $cliente
+        WHERE NombreCliente = $cliente AND strftime('%Y', Fecha) = $anio
         GROUP BY Periodo
         ORDER BY Periodo DESC";
-
-            comando.Parameters.AddWithValue("$cliente", nombreCliente);
-
-            using var lector = await comando.ExecuteReaderAsync();
-            while (await lector.ReadAsync())
-            {
-                resumen.Add(new ResumenGasto
-                {
-                    Periodo = lector.GetString(0),
-                    TotalGastado = lector.GetDecimal(1)
-                });
-            }
-            return resumen;
-        }
+    
+    comando.Parameters.AddWithValue("$cliente", nombreCliente);
+    comando.Parameters.AddWithValue("$anio", anio); // <-- El nuevo parámetro
+    
+    using var lector = await comando.ExecuteReaderAsync();
+    while (await lector.ReadAsync())
+    {
+        resumen.Add(new ResumenGasto
+        {
+            Periodo = lector.GetString(0),
+            TotalGastado = lector.GetDecimal(1)
+        });
+    }
+    return resumen;
+}
         public async Task<List<ResumenGasto>> ObtenerGastoAnualPorClienteAsync(string nombreCliente)
         {
             var resumen = new List<ResumenGasto>();
@@ -129,6 +129,27 @@ namespace blazor_factura.Data
             }
             return resumen;
         }
+
+        public async Task<List<string>> ObtenerAniosDisponiblesAsync()
+{
+    var anios = new List<string>();
+    using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+    await conexion.OpenAsync();
+    
+    var comando = conexion.CreateCommand();
+    // 'strftime' es una función de SQLite para formatear fechas
+    comando.CommandText = @"
+        SELECT DISTINCT strftime('%Y', Fecha) as Anio
+        FROM Facturas
+        ORDER BY Anio DESC";
+    
+    using var lector = await comando.ExecuteReaderAsync();
+    while (await lector.ReadAsync())
+    {
+        anios.Add(lector.GetString(0));
+    }
+    return anios;
+}
 
 
     }
