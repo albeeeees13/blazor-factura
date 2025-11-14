@@ -102,33 +102,7 @@ namespace blazor_factura.Data
     }
     return resumen;
 }
-        public async Task<List<ResumenGasto>> ObtenerGastoAnualPorClienteAsync(string nombreCliente)
-        {
-            var resumen = new List<ResumenGasto>();
-            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
-            await conexion.OpenAsync();
-
-            var comando = conexion.CreateCommand();
-            comando.CommandText = @"
-        SELECT strftime('%Y', Fecha) as Periodo, SUM(Total) as TotalGastado
-        FROM Facturas
-        WHERE NombreCliente = $cliente
-        GROUP BY Periodo
-        ORDER BY Periodo DESC";
-
-            comando.Parameters.AddWithValue("$cliente", nombreCliente);
-
-            using var lector = await comando.ExecuteReaderAsync();
-            while (await lector.ReadAsync())
-            {
-                resumen.Add(new ResumenGasto
-                {
-                    Periodo = lector.GetString(0),
-                    TotalGastado = lector.GetDecimal(1)
-                });
-            }
-            return resumen;
-        }
+       
 
         public async Task<List<string>> ObtenerAniosDisponiblesAsync()
 {
