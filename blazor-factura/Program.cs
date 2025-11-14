@@ -4,13 +4,10 @@ using blazor_factura.Data; // <-- Si esta línea ya existe, no la repitas
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Servicios de .NET 7 ---
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-// Eliminamos el 'WeatherForecastService' de ejemplo
-// builder.Services.AddSingleton<WeatherForecastService>(); 
 
-// --- INICIO: CÓDIGO DE BASE DE DATOS ---
 string rutaBase = builder.Environment.ContentRootPath;
 string nombreDb = "facturas.db";
 string rutaCompletaDb = Path.Combine(rutaBase, nombreDb);
