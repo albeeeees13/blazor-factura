@@ -1,0 +1,153 @@
+@layout Shared.BlankLayout
+@page "/consultas"
+@using blazor_factura.Data
+@inject ServicioFacturas ServicioFacturas
+
+<h1>Tablero de Inteligencia de Negocios (BI)</h1>
+<hr />
+
+<div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+    
+    <div style="border: 2px solid black; padding: 10px; min-width: 180px; text-align: center;">
+        <h3>Ingresos Totales</h3>
+        <h1 style="color: green;">@ingresosTotales.ToString("C")</h1>
+    </div>
+    
+    <div style="border: 2px solid black; padding: 10px; min-width: 180px; text-align: center;">
+        <h3>Ticket Promedio</h3>
+        <h1 style="color: blue;">@ticketPromedio.ToString("C")</h1>
+    </div>
+
+    <div style="border: 2px solid black; padding: 10px; min-width: 180px; text-align: center;">
+        <h3>Promedio Artículos</h3>
+        <h1 style="color: purple;">@promedioArticulos.ToString("N1")</h1>
+        <small>por factura</small>
+    </div>
+
+    <div style="border: 2px solid black; padding: 10px; min-width: 180px; text-align: center;">
+        <h3>Ventas Pequeñas</h3>
+        <h1 style="color: red;">@ventasPequenas</h1>
+        <small>Menores a $500</small>
+    </div>
+</div>
+
+<hr />
+
+<div style="display: flex; flex-wrap: wrap; gap: 30px;">
+
+    <div>
+        <h3>Más Vendidos (Unidades)</h3>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr><th>Producto</th><th>Unidades</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in topArticulos)
+                {
+                    <tr><td>@item.Etiqueta</td><td style="text-align: center;">@item.Valor.ToString("N0")</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h3>Más Rentables (Dinero)</h3>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr><th>Producto</th><th>Ingreso Total</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in productosRentables)
+                {
+                    <tr><td>@item.Etiqueta</td><td style="text-align: center;">@item.Valor.ToString("C")</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h3>📅 Días Más Ocupados</h3>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr><th>Día</th><th>Facturas</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in diasOcupados)
+                {
+                    <tr><td>@item.Etiqueta</td><td style="text-align: center;">@item.Valor.ToString("N0")</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+</div>
+
+<br /><hr /><br />
+
+<div style="display: flex; flex-wrap: wrap; gap: 30px;">
+
+    <div>
+        <h3>Mejores Meses</h3>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr><th>Mes</th><th>Ventas</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in mejoresMeses)
+                {
+                    <tr><td>@item.Etiqueta</td><td>@item.Valor.ToString("C")</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h3> Actividad Reciente</h3>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr><th>Cliente (Fecha)</th><th>Monto</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in ultimasVentas)
+                {
+                    <tr><td>@item.Etiqueta</td><td>@item.Valor.ToString("C")</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<br/><br/>
+<a href="/facturas/nueva" style="font-size: 20px; font-weight: bold;">← Volver a Crear Factura</a>
+<br/><br/>
+
+@code {
+    // Variables para guardar los datos
+    private List<DatoReporte> topArticulos = new();
+    private List<DatoReporte> productosRentables = new(); 
+    private List<DatoReporte> mejoresMeses = new();
+    private List<DatoReporte> diasOcupados = new(); 
+    private List<DatoReporte> ultimasVentas = new(); 
+    
+    private decimal ticketPromedio = 0;
+    private decimal ingresosTotales = 0;
+    private decimal promedioArticulos = 0; 
+    private int ventasPequenas = 0; 
+
+    protected override async Task OnInitializedAsync()
+    {
+       
+        topArticulos = await ServicioFacturas.ObtenerTopArticulosAsync();
+        mejoresMeses = await ServicioFacturas.ObtenerMejoresMesesAsync();
+        ticketPromedio = await ServicioFacturas.ObtenerTicketPromedioAsync();
+        ingresosTotales = await ServicioFacturas.ObtenerIngresosTotalesAsync();
+
+        
+        productosRentables = await ServicioFacturas.ObtenerProductosMasRentablesAsync();
+        diasOcupados = await ServicioFacturas.ObtenerMejorDiaSemanaAsync();
+        promedioArticulos = await ServicioFacturas.ObtenerPromedioArticulosPorFacturaAsync();
+        ventasPequenas = await ServicioFacturas.ObtenerCantidadVentasPequeñasAsync();
+        ultimasVentas = await ServicioFacturas.ObtenerUltimasFacturasAsync();
+    }
+}

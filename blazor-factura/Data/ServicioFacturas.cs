@@ -264,6 +264,84 @@ public async Task<int> ObtenerCantidadVentasPequeñasAsync()
     return Convert.ToInt32(resultado);
 }
 
+public async Task<List<DatoReporte>> ObtenerProductosMasRentablesAsync()
+        {
+            var lista = new List<DatoReporte>();
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+            
+            var comando = conexion.CreateCommand();
+            comando.CommandText = @"
+                SELECT Descripcion, SUM(Cantidad * PrecioUnitario) as TotalDinero
+                FROM Articulos
+                GROUP BY Descripcion
+                ORDER BY TotalDinero DESC
+                LIMIT 5";
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                lista.Add(new DatoReporte { 
+                    Etiqueta = lector.GetString(0), 
+                    Valor = lector.GetDecimal(1) 
+                });
+            }
+            return lista;
+        }
+
+        // CONSULTA 7: Día de la semana con más ventas
+        public async Task<List<DatoReporte>> ObtenerMejorDiaSemanaAsync()
+        {
+            var lista = new List<DatoReporte>();
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+            
+            var comando = conexion.CreateCommand();
+            comando.CommandText = @"
+                SELECT 
+                    CASE strftime('%w', Fecha)
+                        WHEN '0' THEN 'Domingo'
+                        WHEN '1' THEN 'Lunes'
+                        WHEN '2' THEN 'Martes'
+                        WHEN '3' THEN 'Miércoles'
+                        WHEN '4' THEN 'Jueves'
+                        WHEN '5' THEN 'Viernes'
+                        WHEN '6' THEN 'Sábado'
+                    END as Dia,
+                    COUNT(*) as CantidadFacturas
+                FROM Facturas
+                GROUP BY Dia
+                ORDER BY CantidadFacturas DESC";
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                lista.Add(new DatoReporte { 
+                    Etiqueta = lector.GetString(0), 
+                    Valor = lector.GetDecimal(1) // Aquí usamos el conteo como valor
+                });
+            }
+            return lista;
+        }
+
+        // CONSULTA 8: Promedio de artículos por factura
+        public async Task<decimal> ObtenerPromedioArticulosPorFacturaAsync()
+        {
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+            
+            var comando = conexion.CreateCommand();
+            comando.CommandText = @"
+                SELECT CAST(COUNT(*) AS REAL) / (SELECT COUNT(*) FROM Facturas) 
+                FROM Articulos";
+            
+            var resultado = await comando.ExecuteScalarAsync();
+            if (resultado == DBNull.Value || resultado == null) return 0;
+            return Convert.ToDecimal(resultado);
+        }
+
+      
+
 
 
     }

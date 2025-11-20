@@ -1,6 +1,6 @@
 using blazor_factura.Data; 
 using Microsoft.Data.Sqlite;
-using blazor_factura.Data; // <-- Si esta línea ya existe, no la repitas
+
 
 var builder = WebApplication.CreateBuilder(args);
 

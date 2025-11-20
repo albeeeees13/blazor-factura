@@ -74,11 +74,11 @@
 
 
 @code {
-    // Listas para los dropdowns
+    
     private List<string> listaClientes;
     private List<string> listaAnios;
     
-    // Variables de estado
+    
     private string clienteSeleccionado = "";
     private string anioSeleccionado = "";
     
@@ -87,7 +87,7 @@
     private decimal totalAnual = 0;
     private bool reporteListo = false;
 
-    // Al cargar la página, obtenemos las listas para los dropdowns
+    
     protected override async Task OnInitializedAsync()
     {
         listaClientes = await ServicioFacturas.ObtenerClientesAsync();
