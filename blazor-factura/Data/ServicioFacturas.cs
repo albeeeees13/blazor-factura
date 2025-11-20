@@ -228,5 +228,43 @@ public async Task<decimal> ObtenerIngresosTotalesAsync()
 }
 
 
+public async Task<List<DatoReporte>> ObtenerUltimasFacturasAsync()
+{
+    var lista = new List<DatoReporte>();
+    using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+    await conexion.OpenAsync();
+    
+    var comando = conexion.CreateCommand();
+    comando.CommandText = @"
+        SELECT NombreCliente || ' (' || date(Fecha) || ')', Total
+        FROM Facturas
+        ORDER BY Id DESC
+        LIMIT 5";
+
+    using var lector = await comando.ExecuteReaderAsync();
+    while (await lector.ReadAsync())
+    {
+        lista.Add(new DatoReporte { 
+            Etiqueta = lector.GetString(0), 
+            Valor = lector.GetDecimal(1) 
+        });
+    }
+    return lista;
+}
+
+public async Task<int> ObtenerCantidadVentasPequeñasAsync()
+{
+    using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+    await conexion.OpenAsync();
+    
+    var comando = conexion.CreateCommand();
+    comando.CommandText = "SELECT COUNT(*) FROM Facturas WHERE Total < 500";
+    
+    var resultado = await comando.ExecuteScalarAsync();
+    return Convert.ToInt32(resultado);
+}
+
+
+
     }
 }
