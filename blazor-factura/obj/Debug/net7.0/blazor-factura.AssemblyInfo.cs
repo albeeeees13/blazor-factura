@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("blazor-factura")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f062e6349de8d15f4beb466666782f1b89454a9b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b765eb06625cb4668f449af9beb8ceea2ff1968b")]
 [assembly: System.Reflection.AssemblyProductAttribute("blazor-factura")]
 [assembly: System.Reflection.AssemblyTitleAttribute("blazor-factura")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
