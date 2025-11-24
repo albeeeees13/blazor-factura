@@ -5,136 +5,153 @@
 @inject ServicioFacturas ServicioFacturas
 @inject NavigationManager NavigationManager
 
-<a href="/resumen">Ir a Reportes</a>
-<a href="/resumen">Ir a Reportes</a> | 
-<a href="/consultas">Ir a Consultas Inteligentes</a> <hr />
-
-
-<h1>Crear Nueva Factura</h1>
-
-<EditForm Model="facturaActual" OnValidSubmit="HandleValidSubmit" FormName="FacturaForm">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <label>Nombre del Cliente:</label>
-    <br />
-    <InputText @bind-Value="facturaActual.NombreCliente" />
-    <br />
-    <label>Fecha de Factura:</label>
-    <br />
-    <InputDate @bind-Value="facturaActual.Fecha" />
-
-    <hr />
-
-    <h3>Artículos</h3>
-    @if (facturaActual.Articulos.Any())
-    {
-        <ul>
-            @foreach (var art in facturaActual.Articulos)
-            {
-                <li>
-                    @art.Descripcion 
-                    (Cant: @art.Cantidad, 
-                    Precio: @art.PrecioUnitario.ToString("C"), 
-                    Subtotal: @art.Subtotal.ToString("C"))
-                    
-                    <button type="button" @onclick="() => CargarArticuloParaEditar(art)">Editar</button>
-
-                    <button type="button" @onclick="() => QuitarArticulo(art)">Quitar</button>
-                </li>
-            }
-        </ul>
-    }
-    else
-    {
-        <p>No hay artículos agregados.</p>
-    }
-
-    <div style="border: 1px solid black; padding: 10px; margin-top: 15px; margin-bottom: 15px;">
-        
-        <strong>@(articuloParaEditar == null ? "Añadir Artículo" : $"Editando: {articuloParaEditar.Descripcion}")</strong>
-        
-        <br />
-        <EditForm Model="articuloNuevo" OnValidSubmit="GuardarArticulo" FormName="ArticuloForm" Context="articuloContext">
-            <DataAnnotationsValidator />
-            
-            <label>Descripción:</label>
-            <InputText @bind-Value="articuloNuevo.Descripcion" />
-
-            <label>Cantidad:</label>
-            <InputNumber @bind-Value="articuloNuevo.Cantidad" />
-            
-            <label>Precio Unitario:</label>
-            <InputNumber @bind-Value="articuloNuevo.PrecioUnitario" />
-            
-            <button type="submit">@(articuloParaEditar == null ? "Añadir +" : "Actualizar")</button>
-            
-            @if (articuloParaEditar != null)
-            {
-                <button type="button" @onclick="CancelarEdicion">Cancelar</button>
-            }
-            
-            <br />
-            <ValidationSummary />
-        </EditForm>
-    </div>
-    <hr />
-    <h2>Total: @facturaActual.Total.ToString("C")</h2>
+<div class="apple-card">
     
-    <button type="submit">Guardar Factura</button>
-
-</EditForm>
-
-@if (!string.IsNullOrEmpty(mensajeExito))
-{
-    <div style="color: green; margin-top: 15px;">
-        @mensajeExito
+    <div class="top-links">
+        <a href="/resumen">Ver Reportes</a> • <a href="/consultas">Consultas Inteligentes</a>
     </div>
-}
+
+    <h1>Nueva Factura</h1>
+
+    <EditForm Model="facturaActual" OnValidSubmit="HandleValidSubmit" FormName="FacturaForm">
+        <DataAnnotationsValidator />
+        
+        <div class="form-group">
+            <label>Cliente</label>
+            <InputText @bind-Value="facturaActual.NombreCliente" placeholder="Nombre del cliente" />
+        </div>
+
+        <div class="form-group">
+            <label>Fecha</label>
+            <InputDate @bind-Value="facturaActual.Fecha" />
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e5e5ea; margin: 30px 0;" />
+
+        <h3>Artículos</h3>
+        
+        @if (facturaActual.Articulos.Any())
+        {
+            <ul class="apple-list">
+                @foreach (var art in facturaActual.Articulos)
+                {
+                    <li>
+                        <div>
+                            <strong style="font-size: 17px;">@art.Descripcion</strong>
+                            <div style="font-size: 13px; color: var(--color-marron);">
+                                @art.Cantidad x @art.PrecioUnitario.ToString("C")
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: 600;">@art.Subtotal.ToString("C")</span>
+                            
+                            <button type="button" class="btn-link" style="font-size:13px;" 
+                                    @onclick="() => CargarArticuloParaEditar(art)">Editar</button>
+
+                            <button type="button" class="btn-danger" 
+                                    @onclick="() => QuitarArticulo(art)">Eliminar</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div style="text-align: center; padding: 20px; color: #999;">
+                No hay artículos agregados.
+            </div>
+        }
+
+        <div class="add-panel">
+            <label style="margin-bottom: 15px; display:block; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+                @(articuloParaEditar == null ? "Añadir Artículo" : $"Editando: {articuloParaEditar.Descripcion}")
+            </label>
+
+            <EditForm Model="articuloNuevo" OnValidSubmit="GuardarArticulo" FormName="ArticuloForm" Context="articuloContext">
+                <DataAnnotationsValidator />
+                
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <InputText @bind-Value="articuloNuevo.Descripcion" placeholder="Producto..." />
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Cantidad</label>
+                        <InputNumber @bind-Value="articuloNuevo.Cantidad" />
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1;">
+                        <label>Precio Unitario</label>
+                        <InputNumber @bind-Value="articuloNuevo.PrecioUnitario" />
+                    </div>
+                </div>
+                
+                <div style="text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
+                    @if (articuloParaEditar != null)
+                    {
+                        <button type="button" class="btn-danger" @onclick="CancelarEdicion">Cancelar</button>
+                    }
+                    <button type="submit" class="btn-add">
+                        @(articuloParaEditar == null ? "Agregar +" : "Actualizar")
+                    </button>
+                </div>
+                <ValidationSummary class="validation-message" />
+            </EditForm>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px;">
+                <span style="color:var(--color-marron); font-weight:600;">Total a Pagar</span>
+                <span style="font-size: 32px; font-weight: 700; color:var(--color-profundo);">@facturaActual.Total.ToString("C")</span>
+            </div>
+            
+            <button type="submit" class="btn-primary">Guardar Factura</button>
+        </div>
+
+        <ValidationSummary class="validation-message" />
+
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(mensajeExito))
+    {
+        <div style="margin-top: 20px; padding: 15px; background: #eafdf2; border: 1px solid #26b050; border-radius: 12px; text-align: center; color: #155724;">
+            ✔ @mensajeExito
+        </div>
+    }
+</div>
 
 @code {
     private Factura facturaActual = new();
     private Articulo articuloNuevo = new();
     private string mensajeExito = "";
-
-    
     private Articulo articuloParaEditar = null;
 
-    
     private void GuardarArticulo()
     {
         if (articuloParaEditar != null)
         {
-          
             articuloParaEditar.Descripcion = articuloNuevo.Descripcion;
             articuloParaEditar.Cantidad = articuloNuevo.Cantidad;
             articuloParaEditar.PrecioUnitario = articuloNuevo.PrecioUnitario;
         }
         else
         {
-          
             facturaActual.Articulos.Add(articuloNuevo);
         }
-
-       
         CancelarEdicion();
         mensajeExito = "";
     }
 
-   
     private void QuitarArticulo(Articulo articulo)
     {
         facturaActual.Articulos.Remove(articulo);
-        CancelarEdicion(); // Cancelamos la edición si estábamos editando este artículo
+        CancelarEdicion();
     }
 
-   
     private void CargarArticuloParaEditar(Articulo art)
     {
-       
         articuloParaEditar = art;
-
-      
         articuloNuevo = new Articulo
         {
             Descripcion = art.Descripcion,
@@ -143,34 +160,31 @@
         };
     }
 
-   
     private void CancelarEdicion()
     {
         articuloNuevo = new Articulo();
         articuloParaEditar = null;
     }
 
-    
     private async Task HandleValidSubmit()
     {
         if (!facturaActual.Articulos.Any())
         {
-            mensajeExito = "Error: Debe agregar al menos un artículo.";
+            mensajeExito = "Error: Debes agregar al menos un artículo.";
             return;
         }
 
         try
         {
             await ServicioFacturas.GuardarFacturaAsync(facturaActual);
-            
             facturaActual = new();
             articuloNuevo = new();
             CancelarEdicion();
-            mensajeExito = "¡Factura guardada con éxito en la Base de Datos!";
+            mensajeExito = "¡Factura guardada correctamente!";
         }
         catch (Exception ex)
         {
-            mensajeExito = $"Error al guardar: {ex.Message}";
+            mensajeExito = $"Error: {ex.Message}";
         }
     }
 }
