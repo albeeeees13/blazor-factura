@@ -1,116 +1,99 @@
-@page "/resumen"
 @layout Shared.BlankLayout
+@page "/resumen"
 @using blazor_factura.Data
 @inject ServicioFacturas ServicioFacturas
 
-<a href="/facturas/nueva">Regresar a Crear Factura</a>
-<hr />
+<div class="apple-card">
+    <div class="top-links">
+        <a href="/facturas/nueva">← Volver a Factura</a> • <a href="/consultas">Consultas Inteligentes</a>
+    </div>
 
-<h1>Resumen de Gastos por Cliente</h1>
+    <h1>Reporte de Cliente</h1>
 
-<label for="cliente">Seleccione un cliente:</label>
-<select id="cliente" @bind="clienteSeleccionado" @bind:after="ActualizarReporte">
-    <option value="">-- Seleccione Cliente --</option>
-    @if (listaClientes != null)
+    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+        <div class="form-group" style="flex: 1;">
+            <label for="cliente">Cliente</label>
+            <select id="cliente" @bind="clienteSeleccionado" @bind:after="ActualizarReporte">
+                <option value="">-- Seleccione --</option>
+                @if (listaClientes != null) {
+                    @foreach (var c in listaClientes) { <option value="@c">@c</option> }
+                }
+            </select>
+        </div>
+
+        <div class="form-group" style="flex: 1;">
+            <label for="anio">Año</label>
+            <select id="anio" @bind="anioSeleccionado" @bind:after="ActualizarReporte">
+                <option value="">-- Seleccione --</option>
+                @if (listaAnios != null) {
+                    @foreach (var a in listaAnios) { <option value="@a">@a</option> }
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (reporteListo)
     {
-        @foreach (var cliente in listaClientes)
+        <div class="add-panel" style="text-align: center; margin-bottom: 30px;">
+            <label>Total Anual</label>
+            <div style="font-size: 34px; font-weight: 800; color: var(--color-profundo);">@totalAnual.ToString("C")</div>
+            <div style="color: var(--color-marron); font-size: 14px; margin-top: 5px;">
+                Cliente: @clienteSeleccionado | Año: @anioSeleccionado
+            </div>
+        </div>
+
+        <h3>Detalle Mensual</h3>
+        @if (gastoMensual != null && gastoMensual.Any())
         {
-            <option value="@cliente">@cliente</option>
+            <ul class="apple-list">
+                @foreach (var item in gastoMensual)
+                {
+                    <li>
+                        <span>@item.Periodo</span>
+                        <strong>@item.TotalGastado.ToString("C")</strong>
+                    </li>
+                }
+            </ul>
         }
-    }
-</select>
-
-<label for="anio">Seleccione un año:</label>
-<select id="anio" @bind="anioSeleccionado" @bind:after="ActualizarReporte">
-    <option value="">-- Seleccione Año --</option>
-    @if (listaAnios != null)
-    {
-        @foreach (var anio in listaAnios)
+        else
         {
-            <option value="@anio">@anio</option>
+            <p style="text-align: center; color: #999;">No hay movimientos en este periodo.</p>
         }
-    }
-</select>
-
-@if (reporteListo)
-{
-    <hr />
-    <h2>Reporte para: @clienteSeleccionado (@anioSeleccionado)</h2>
-
-    <h3>Total del Año: @totalAnual.ToString("C")</h3>
-    
-    <hr />
-
-    <h3>Detalle por Mes</h3>
-    @if (gastoMensual == null)
-    {
-        <p>Cargando...</p>
-    }
-    else if (!gastoMensual.Any())
-    {
-        <p>No hay gastos registrados para este cliente en este año.</p>
     }
     else
     {
-        <table border="1" cellpadding="5">
-            <thead>
-                <tr>
-                    <th>Mes (YYYY-MM)</th>
-                    <th>Total Gastado</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in gastoMensual)
-                {
-                    <tr>
-                        <td>@item.Periodo</td>
-                        <td>@item.TotalGastado.ToString("C")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <p style="text-align: center; color: #999; margin-top: 40px;">
+            Seleccione un cliente y un año para ver el reporte.
+        </p>
     }
-}
-
+</div>
 
 @code {
-    
+    // El código C# sigue idéntico
     private List<string> listaClientes;
     private List<string> listaAnios;
-    
-    
     private string clienteSeleccionado = "";
     private string anioSeleccionado = "";
-    
-    // Datos del reporte
     private List<ResumenGasto> gastoMensual;
     private decimal totalAnual = 0;
     private bool reporteListo = false;
 
-    
     protected override async Task OnInitializedAsync()
     {
         listaClientes = await ServicioFacturas.ObtenerClientesAsync();
         listaAnios = await ServicioFacturas.ObtenerAniosDisponiblesAsync();
     }
 
-    // Este método se llama CADA VEZ que cambias CUALQUIER dropdown
     private async Task ActualizarReporte()
     {
-        // Reseteamos todo
         gastoMensual = null;
         totalAnual = 0;
         reporteListo = false;
 
-        // Solo buscamos en la BD si AMBOS están seleccionados
         if (!string.IsNullOrEmpty(clienteSeleccionado) && !string.IsNullOrEmpty(anioSeleccionado))
         {
-            // 1. Obtenemos el detalle mensual
             gastoMensual = await ServicioFacturas.ObtenerGastoMensualAsync(clienteSeleccionado, anioSeleccionado);
-            
-            // 2. Calculamos el total anual SUMANDO los meses (más eficiente)
             totalAnual = gastoMensual.Sum(item => item.TotalGastado);
-            
             reporteListo = true;
         }
     }
