@@ -89,7 +89,7 @@ namespace blazor_factura.Data
         ORDER BY Periodo DESC";
     
     comando.Parameters.AddWithValue("$cliente", nombreCliente);
-    comando.Parameters.AddWithValue("$anio", anio); // <-- El nuevo parámetro
+    comando.Parameters.AddWithValue("$anio", anio); // <- El nuevo parámetro
     
     using var lector = await comando.ExecuteReaderAsync();
     while (await lector.ReadAsync())
@@ -111,11 +111,12 @@ namespace blazor_factura.Data
     await conexion.OpenAsync();
     
     var comando = conexion.CreateCommand();
-    // 'strftime' es una función de SQLite para formatear fechas
+   
     comando.CommandText = @"
         SELECT DISTINCT strftime('%Y', Fecha) as Anio
         FROM Facturas
         ORDER BY Anio DESC";
+        
     
     using var lector = await comando.ExecuteReaderAsync();
     while (await lector.ReadAsync())
@@ -136,6 +137,7 @@ public async Task<List<DatoReporte>> ObtenerTopArticulosAsync()
     comando.CommandText = @"
         SELECT Descripcion, SUM(Cantidad) as TotalVendido
         FROM Articulos
+        WHERE f.Archivada = 0
         GROUP BY Descripcion
         ORDER BY TotalVendido DESC
         LIMIT 5";
@@ -162,6 +164,7 @@ public async Task<List<DatoReporte>> ObtenerMejoresMesesAsync()
     comando.CommandText = @"
         SELECT strftime('%Y-%m', Fecha) as Mes, SUM(Total) as TotalVentas
         FROM Facturas
+        WHERE f.Archivada = 0
         GROUP BY Mes
         ORDER BY TotalVentas DESC
         LIMIT 5";
@@ -187,6 +190,7 @@ public async Task<List<DatoReporte>> ObtenerTopClientesAsync()
     comando.CommandText = @"
         SELECT NombreCliente, SUM(Total) as TotalGastado
         FROM Facturas
+        WHERE f.Archivada = 0
         GROUP BY NombreCliente
         ORDER BY TotalGastado DESC
         LIMIT 5";
@@ -238,6 +242,7 @@ public async Task<List<DatoReporte>> ObtenerUltimasFacturasAsync()
     comando.CommandText = @"
         SELECT NombreCliente || ' (' || date(Fecha) || ')', Total
         FROM Facturas
+        WHERE f.Archivada = 0
         ORDER BY Id DESC
         LIMIT 5";
 
@@ -274,6 +279,7 @@ public async Task<List<DatoReporte>> ObtenerProductosMasRentablesAsync()
             comando.CommandText = @"
                 SELECT Descripcion, SUM(Cantidad * PrecioUnitario) as TotalDinero
                 FROM Articulos
+                WHERE f.Archivada = 0
                 GROUP BY Descripcion
                 ORDER BY TotalDinero DESC
                 LIMIT 5";
@@ -289,7 +295,7 @@ public async Task<List<DatoReporte>> ObtenerProductosMasRentablesAsync()
             return lista;
         }
 
-        // CONSULTA 7: Día de la semana con más ventas
+        
         public async Task<List<DatoReporte>> ObtenerMejorDiaSemanaAsync()
         {
             var lista = new List<DatoReporte>();
@@ -310,6 +316,7 @@ public async Task<List<DatoReporte>> ObtenerProductosMasRentablesAsync()
                     END as Dia,
                     COUNT(*) as CantidadFacturas
                 FROM Facturas
+                WHERE f.Archivada = 0
                 GROUP BY Dia
                 ORDER BY CantidadFacturas DESC";
 
@@ -318,13 +325,13 @@ public async Task<List<DatoReporte>> ObtenerProductosMasRentablesAsync()
             {
                 lista.Add(new DatoReporte { 
                     Etiqueta = lector.GetString(0), 
-                    Valor = lector.GetDecimal(1) // Aquí usamos el conteo como valor
+                    Valor = lector.GetDecimal(1) 
                 });
             }
             return lista;
         }
 
-        // CONSULTA 8: Promedio de artículos por factura
+        
         public async Task<decimal> ObtenerPromedioArticulosPorFacturaAsync()
         {
             using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
@@ -340,9 +347,52 @@ public async Task<List<DatoReporte>> ObtenerProductosMasRentablesAsync()
             return Convert.ToDecimal(resultado);
         }
 
+        public async Task<List<Factura>> ObtenerFacturasPorEstadoAsync(bool buscarArchivadas)
+        {
+            var lista = new List<Factura>();
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+          
+            comando.CommandText = "SELECT Id, Fecha, NombreCliente, Total, Archivada FROM Facturas WHERE Archivada = $estado ORDER BY Fecha DESC";
+            
+            comando.Parameters.AddWithValue("$estado", buscarArchivadas ? 1 : 0);
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                lista.Add(new Factura
+                {
+                    Id = lector.GetInt32(0),
+                    Fecha = DateTime.Parse(lector.GetString(1)),
+                    NombreCliente = lector.GetString(2),
+                    
+                    Archivada = lector.GetBoolean(4)
+                });
+            }
+            return lista;
+        }
+
+       
+        public async Task CambiarEstadoArchivoAsync(int idFactura, bool archivar)
+        {
+            using var conexion = new SqliteConnection($"Data Source={_rutaDb}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "UPDATE Facturas SET Archivada = $estado WHERE Id = $id";
+            comando.Parameters.AddWithValue("$estado", archivar ? 1 : 0);
+            comando.Parameters.AddWithValue("$id", idFactura);
+
+            await comando.ExecuteNonQueryAsync();
+        }
+
       
 
 
 
     }
+
+    
 }

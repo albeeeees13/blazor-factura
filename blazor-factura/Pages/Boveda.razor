@@ -1,0 +1,100 @@
+@layout Shared.BlankLayout
+@page "/boveda"
+@using blazor_factura.Data
+@inject ServicioFacturas ServicioFacturas
+
+<div class="apple-card">
+    <div class="top-links">
+        <a href="/historial">← Volver al Historial</a>
+    </div>
+
+    <h1>🗄️ Bóveda de Archivo</h1>
+
+    @if (!accesoConcedido)
+    {
+        <div style="text-align: center; margin-top: 40px;">
+            <p>Esta área está protegida.</p>
+            
+            <div class="form-group" style="max-width: 300px; margin: 0 auto;">
+                <label>Contraseña</label>
+                <input type="password" class="form-control" @bind="passwordIngresado" />
+            </div>
+            
+            <button class="btn-primary" style="max-width: 300px;" @onclick="VerificarPassword">
+                Desbloquear
+            </button>
+
+            @if (mostrarError)
+            {
+                <p style="color: red; margin-top: 10px;">Contraseña incorrecta.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div style="background: #e8f5e9; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; color: green;">
+            🔓 Acceso Concedido
+        </div>
+
+        @if (facturasArchivadas.Any())
+        {
+            <ul class="apple-list">
+                @foreach (var f in facturasArchivadas)
+                {
+                    <li style="opacity: 0.7;"> <div>
+                            <strong>@f.NombreCliente</strong>
+                            <div style="font-size: 12px;">@f.Fecha.ToShortDateString()</div>
+                        </div>
+                        
+                        <button class="btn-add" style="font-size: 13px;" 
+                                @onclick="() => Desarchivar(f.Id)">
+                            ♻️ Restaurar
+                        </button>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p style="text-align: center;">La bóveda está vacía.</p>
+        }
+    }
+</div>
+
+@code {
+    private bool accesoConcedido = false;
+    private string passwordIngresado = "";
+    private bool mostrarError = false;
+    private List<Factura> facturasArchivadas = new();
+
+    // --- CONFIGURACIÓN DE LA CONTRASEÑA ---
+    private string passwordCorrecto = "1234"; // <--- CAMBIA ESTO SI QUIERES
+
+    private async Task VerificarPassword()
+    {
+        if (passwordIngresado == passwordCorrecto)
+        {
+            accesoConcedido = true;
+            mostrarError = false;
+            await CargarArchivadas();
+        }
+        else
+        {
+            mostrarError = true;
+            passwordIngresado = "";
+        }
+    }
+
+    private async Task CargarArchivadas()
+    {
+        // Pedimos las SI archivadas (true)
+        facturasArchivadas = await ServicioFacturas.ObtenerFacturasPorEstadoAsync(true);
+    }
+
+    private async Task Desarchivar(int id)
+    {
+        // Le quitamos el estado de archivo (false)
+        await ServicioFacturas.CambiarEstadoArchivoAsync(id, false);
+        await CargarArchivadas();
+    }
+}

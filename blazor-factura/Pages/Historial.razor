@@ -1,0 +1,62 @@
+@layout Shared.BlankLayout
+@page "/historial"
+@using blazor_factura.Data
+@inject ServicioFacturas ServicioFacturas
+
+<div class="apple-card">
+    <div class="top-links">
+        <a href="/facturas/nueva">Nueva</a> • <a href="/boveda">Bóveda Secreta</a>
+    </div>
+
+    <h1>Facturas Activas</h1>
+
+    @if (facturas == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!facturas.Any())
+    {
+        <p style="text-align: center; color: #999;">No hay facturas activas.</p>
+    }
+    else
+    {
+        <ul class="apple-list">
+            @foreach (var f in facturas)
+            {
+                <li>
+                    <div>
+                        <strong>@f.NombreCliente</strong>
+                        <div style="font-size: 12px; color: #999;">@f.Fecha.ToShortDateString()</div>
+                    </div>
+                    
+                    <button class="btn-danger" style="background-color: #f0f0f0; color: #666;" 
+                            @onclick="() => Archivar(f.Id)">
+                        📁 Archivar
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    private List<Factura> facturas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        // Pedimos las NO archivadas (false)
+        facturas = await ServicioFacturas.ObtenerFacturasPorEstadoAsync(false);
+    }
+
+    private async Task Archivar(int id)
+    {
+        // La mandamos al archivo (true)
+        await ServicioFacturas.CambiarEstadoArchivoAsync(id, true);
+        await Cargar(); // Recargamos la lista
+    }
+}

@@ -25,7 +25,8 @@ comandoFacturas.CommandText = @"
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
         Fecha TEXT NOT NULL,
         NombreCliente TEXT NOT NULL,
-        Total REAL NOT NULL
+        Total REAL NOT NULL,
+        Archivada INTEGER DEFAULT 0
     );
 ";
 comandoFacturas.ExecuteNonQuery();
@@ -56,7 +57,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// --- Mapeo de .NET 7 ---
+//  Mapeo de .NET 7 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

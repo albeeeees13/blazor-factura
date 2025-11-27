@@ -11,7 +11,7 @@ namespace blazor_factura.Data
         [Required(ErrorMessage = "El nombre del cliente es obligatorio.")]
         public string NombreCliente { get; set; } = string.Empty;
         
-        // Esta línea necesita que 'Articulo.cs' exista
+        public bool Archivada { get; set; } = false;
         public List<Articulo> Articulos { get; set; } = new();
 
         public decimal Total => Articulos.Sum(a => a.Subtotal);
