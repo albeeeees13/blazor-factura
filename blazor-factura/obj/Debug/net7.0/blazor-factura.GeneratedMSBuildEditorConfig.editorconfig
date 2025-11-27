@@ -24,6 +24,10 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/albes/Desktop/blazor-factura/blazor-factura/blazor-factura/Pages/Boveda.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQm92ZWRhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/albes/Desktop/blazor-factura/blazor-factura/blazor-factura/Pages/Consultas.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29uc3VsdGFzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
