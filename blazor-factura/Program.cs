@@ -9,7 +9,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 string rutaBase = builder.Environment.ContentRootPath;
-string nombreDb = "facturas.db";
+string nombreDb = "facturas_v2.db";
 string rutaCompletaDb = Path.Combine(rutaBase, nombreDb);
 
 builder.Services.AddSingleton<ServicioFacturas>(sp => 
